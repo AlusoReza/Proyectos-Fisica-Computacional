@@ -1,3 +1,8 @@
+<div align="right">
+  <a href="README.md"><kbd><b>🇺🇸 English</b></kbd></a>
+  <a href="README.en.md"><kbd><b>🇪🇸 Español</b></kbd></a>
+</div>
+
 # ⚛️ Proyectos de Física Computacional: Modelado y Simulación Numérica
 
 Este repositorio contiene una colección de simulaciones numéricas de sistemas físicos complejos desarrolladas íntegramente en **Fortran 90**. El proyecto aborda problemas fundamentales en astrofísica, mecánica estadística y física cuántica que requieren métodos numéricos avanzados debido a la ausencia de soluciones analíticas exactas.

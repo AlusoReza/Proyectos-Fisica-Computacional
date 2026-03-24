@@ -1,6 +1,6 @@
 <div align="right">
   <a href="README.md"><kbd><b>🇺🇸 English</b></kbd></a>
-  <a href="README.en.md"><kbd><b>🇪🇸 Español</b></kbd></a>
+  <a href="README.es.md"><kbd><b>🇪🇸 Español</b></kbd></a>
 </div>
 
 # ⚛️ Proyectos de Física Computacional: Modelado y Simulación Numérica

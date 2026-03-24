@@ -1,0 +1,516 @@
+!     ESTE PROGRAMA SE HA CREADO PARA INTENTAR HACER QUE EL ALGORITMO DE VERLET FUNCIONE AL MENOS PARA UN PLANETA.
+      PROGRAM EVOLTIE
+
+      IMPLICIT NONE
+
+      INTEGER*8:: I, J, N, K, L, P
+      REAL*8:: MS, C, G
+      REAL*8:: T, H, HR
+      REAL*8:: MODR
+      INTEGER*8, DIMENSION(1:10):: Z
+      REAL*8, DIMENSION(1:10):: M, MR, PER, SUMMOM, SUMET
+      REAL*8, DIMENSION(:,:,:), ALLOCATABLE:: R, V, A, ALPHA
+      REAL*8, DIMENSION(:,:,:), ALLOCATABLE:: RR, VR, AR
+      REAL*8, DIMENSION(:,:,:), ALLOCATABLE:: RDR, RG
+      REAL*8, DIMENSION(:,:), ALLOCATABLE:: MOM, EP, EC, ET
+      
+
+      PARAMETER(G = 6.67D-11) !NM²/LG², ES LA CONSTANTE GRAVITATORIA.
+      PARAMETER(MS = 1.99D30) !KG, ES LA MASA SOLAR.
+      PARAMETER(C = 1.496D11)   !M, ES LA DISTANCIA TIERRA-SOL.
+
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+
+      WRITE(6,*) "ESTE PROGRAMA SIMULA EL MOVIMIENTO  DE LOS PLANETAS"
+      WRITE(6,*) "DEL SISTEMA SOLAR CONOCIENDO LA CONDICION INICIAL"
+      WRITE(6,*) "DE CADA UNO DE ELLOS."
+      WRITE(6,*) "Y SIGUIENDO UN ALGORITMO DE VERLET DURANTE UN TIEMPO:"
+      WRITE(6,*) "T, QUE AUMENTA EN INCREMENTOS DE TIEMPO: H. "
+      
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) "EL LIMITE DE DIVISIONES A RELIZAR SE HA COLOCADO "
+      WRITE(6,*) "EN 400 MIL. ESTAS SERAN DE LA FORMA T/H. "
+      WRITE(6,*) " "    
+      WRITE(6,*) "AHORA, INTRODUZCA T EN DÍAS:"
+      WRITE(6,*) "(TEN EN CUENTA QUE EL PERIODO DE MERCURIO ES 88 DÍAS"
+      WRITE(6,*) "Y EL PERIODO DE PLUTON SON 90560 DÍAS.)"
+      WRITE(6,*) " "
+      READ(5,*) T
+      WRITE(6,*) " "
+      WRITE(6,*) "Y H TAMBIEN EN DIAS:"
+      WRITE(6,*) "(CUANTO MENOR SEA H, MAYOR PRECISION TENDRAN LOS "
+      WRITE(6,*) "RESULTADOS, PERO TEN EN CUENTA QUE TAMBIEN MAS "
+      WRITE(6,*) "CALCULO TENDRA QUE REALIZAR EL ORDENADOR.)"
+      WRITE(6,*) " "
+ 1    READ(5,*) H
+      
+      N = T/H
+
+      IF (N.LT.1) THEN
+         WRITE(6,*) " "
+         WRITE(6,*) "LA DIVISION TEMPORAL ES MENOR QUE 1"
+         WRITE(6,*) "POR FAVOR, REDUZCA EL VALOR DE H."
+         WRITE(6,*) " "
+         WRITE(6,*) "VUELVA A ESCRIBIR H EN DÍAS:"
+         GO TO 1
+      ELSE IF (N.GT.400000) THEN
+         WRITE(6,*) " "
+         WRITE(6,*) "LA DIVISION TEMPORAL ES DEMASIADO GRANDE"
+         WRITE(6,*) "POR FAVOR, AUMENTE EL VALOR DE H."
+         WRITE(6,*) " "
+         WRITE(6,*) "VUELVA A ESCRIBIR H EN DÍAS:"
+         GO TO 1
+      ELSE
+         WRITE(6,*) " "
+         WRITE(6,*) "SE VAN A REALIZAR APROXIMADAMENTE:", N
+         WRITE(6,*) "DIVISIONES DEL TIEMPO."
+         GO TO 2
+      END IF  
+
+ 2    ALLOCATE(R(1:10,1:2,1:N))
+      ALLOCATE(V(1:10,1:2,1:N))
+      ALLOCATE(A(1:10,1:2,1:N))
+      ALLOCATE(RR(1:10,1:2,1:N))
+      ALLOCATE(VR(1:10,1:2,1:N))
+      ALLOCATE(AR(1:10,1:2,1:N))
+      ALLOCATE(RDR(1:10,1:2,1:N))
+      ALLOCATE(RG(1:10,1:2,1:N))
+      ALLOCATE(ALPHA(1:10,1:2,1:N))
+      ALLOCATE(MOM(1:10,1:N))
+      ALLOCATE(EP(1:10,1:N))
+      ALLOCATE(EC(1:10,1:N))
+      ALLOCATE(ET(1:10,1:N))
+!     --------------------------------------------------------------
+      CALL DATOSPLAN     
+!     ---------------------------------------------------------------
+      CALL ALGVERPLAN
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "SE CALCULARON LAS VARIACIONES DE LOS EJES X E Y, Y"
+      WRITE(6,*) "LOS RESULTADOS SE HAN GUARDADO EN LA MISMA CARPETA"
+      WRITE(6,*) "DEL PROGRAMA CON LOS SIGUIENTES NOMBRES: "
+      WRITE(6,*) "Y VXY-MOVHELNOM Y VXY-MOVGEONOM, PARA EL"
+      WRITE(6,*) "MOVIMIENTO HELIOCENTRICO Y GEOCENTRICO"
+      WRITE(6,*) "RESPECTIVAMENTE PARA CADA UNO DE LOS PLANETAS."     
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+!     ---------------------------------------------------------------
+      WRITE(6,*) "SI DESEA VER STATS DEL PERIODO, MOMENTO Y ENERGIA"
+      WRITE(6,*) "PARA CADA UNO DE LOS PLANETAS PULSE 1, SI NO, 2."
+ 4    READ(5,*) P
+
+      IF (P.EQ.1) THEN
+         CALL PERPLAN
+         CALL MOMPLAN
+         CALL ENERGPLAN
+      WRITE(6,*) " "
+      WRITE(6,*) "+ SI NO SE OBTIENEN LOS CORRESPONDIENTES "
+      WRITE(6,*) "RESULTADOS ESPERADOS ES DEBIDO A QUE SE HA "
+      WRITE(6,*) "INTRODUCIDO UN T MENOR AL DEL PERIODO REAL."
+      WRITE(6,*) " "
+      WRITE(6,*) "++ LA SUMA DE MOMENTOS NO CERA ENTERAMENTE 0,"
+      WRITE(6,*) "YA QUE HEMOS SUPUESTO EL SOL FIJO EN UN PUNTO "
+      WRITE(6,*) "Y TAMBIÉN DEBIDO A QUE EL ORDENADOR NO CALCULA"
+      WRITE(6,*) "PERFECTAMENTE PRECISO."
+      
+      ELSE IF (P.EQ.2) THEN
+         GO TO 3
+      ELSE
+         WRITE(6,*) "POR FAVOR, PULSE 1 O 2."
+         GO TO 4
+      END IF
+      
+!     ---------------------------------------------------------------
+ 3    CALL REPRESENTACION
+
+      
+!     GUARDAMOS LOS RESULTADOS
+!      DO J = 1, N
+!       WRITE(6,*) J, AR(4,1,J), AR(4,2,J)
+!      END DO
+!      DO J = 1, N
+!       WRITE(6,*) J, ALPHA(4,1,J), ALPHA(4,2,J)
+!      END DO
+!      DO J = 1, N
+!       WRITE(6,*) J, RDR(4,1,J), RDR(4,2,J)
+!      END DO
+
+      STOP
+      
+      CONTAINS 
+!     ----------------------------------------------------------------
+      SUBROUTINE DATOSPLAN
+      
+!     INTRODUCIMOS DATOS DE TODOS LOS PLANETAS.
+      WRITE(6,*) "SE CONSIDERAN LOS SIGUIENTES COMPONENTES PARA " 
+      WRITE(6,*) "EL SISTEMA SOLAR: SOL - 1, MERCURIO - 2, VENUS - 3," 
+      WRITE(6,*) "TIERRA - 4, LA LUNA SE OBVIA, MARTE - 5, JUPITER - 6,"
+      WRITE(6,*) "SATURNO - 7, URANO - 8, NEPTUNO - 9 Y PLUTÓN -10."
+
+!     PARA EL SOL.
+      M(1) = MS
+      R(1,1,1) = 0.D0
+      V(1,2,1) = 0.D0
+      R(1,2,1) = 0.D0
+      V(1,1,1) = 0.D0
+      
+!     PARA MERCURIO.      
+      M(2) = 0.33D24
+      R(2,1,1) = 57.9D9
+      V(2,2,1) = 47.4D3
+      R(2,2,1) = 0.D0
+      V(2,1,1) = 0.D0
+      
+!     PARA VENUS.      
+      M(3) = 4.87D24
+      R(3,1,1) = 108.9D9
+      V(3,2,1) = 35D3
+      R(3,2,1) = 0.D0
+      V(3,1,1) = 0.D0
+
+!     PARA LA TIERRA.
+      M(4) = 5.97D24
+      R(4,1,1) = C
+      V(4,2,1) = 29.8D3
+      R(4,2,1) = 0.D0
+      V(4,1,1) = 0.D0
+
+!     PARA MARTE.
+      M(5) = 0.642D24
+      R(5,1,1) = 228D9
+      V(5,2,1) = 24.1D3
+      R(5,2,1) = 0.D0
+      V(5,1,1) = 0.D0
+      
+!     PARA JUPITER.
+      M(6) = 1898D24
+      R(6,1,1) = 778.5D9
+      V(6,2,1) = 13.1D3
+      R(6,2,1) = 0.D0
+      V(6,1,1) = 0.D0
+      
+!     PARA SATURNO
+      M(7) = 568D24
+      R(7,1,1) = 1432D9
+      V(7,2,1) = 9.7D3
+      R(7,2,1) = 0.D0
+      V(7,1,1) = 0.D0
+      
+!     PARA URANO.
+      M(8) = 86.8D24
+      R(8,1,1) = 2867D9
+      V(8,2,1) = 6.8D3
+      R(8,2,1) = 0.D0
+      V(8,1,1) = 0.D0
+      
+!     PARA NEPTUNO.
+      M(9) = 102D24
+      R(9,1,1) = 4515D9
+      V(9,2,1) = 5.4D3
+      R(9,2,1) = 0.D0
+      V(9,1,1) = 0.D0
+      
+!     PARA PLUTON.      
+      M(10) = 0.013D24
+      R(10,1,1) = 5906.4D9
+      V(10,2,1) = 4.7D3
+      R(10,2,1) = 0.D0
+      V(10,1,1) = 0.D0
+      
+!     REESCALAMOS
+      DO I = 1, 10
+         MR(I) = M(I)/MS
+         DO J = 1, 2
+            RR(I,J,1) = R(I,J,1)/C
+            VR(I,J,1) = V(I,J,1)*((C/(G*MS))**(0.5D0))
+         END DO
+      END DO
+
+      HR = ((G*MS/C**3.D0)**0.5D0)*H*24*3600  
+
+      WRITE(6,*) " "
+      WRITE(6,*) "LOS DATOS INICIALES INTRODUCIDOS SON:"
+      DO I = 1, 10
+
+         WRITE(6,*) " "
+         WRITE(6,*) "- PARA I =", I
+         WRITE(6,*) "M(I)=", M(I), "KG."
+         WRITE(6,*) "R(I)=", R(I,1,1), "M."
+         WRITE(6,*) "V(I)=", V(I,2,1), "M/S."
+         
+      END DO
+
+      END SUBROUTINE DATOSPLAN
+!     ------------------------------------------------------------
+      SUBROUTINE ALGVERPLAN
+        
+!     COMENZAMOS ALGORIMO DE VERLET:
+
+      DO I = 1, 10
+         DO J = 1, 2
+            DO K = 1, N
+               AR(I,J,K)=0.D0
+            END DO
+         END DO
+      END DO
+
+      DO K = 2, 10
+      DO L=1,10
+         IF(L.NE.K) THEN
+      MODR=((RR(K,1,1)-RR(L,1,1))**(2.D0))+(RR(K,2,1)-RR(L,2,1))**(2.D0)
+      AR(K,1,1) = AR(K,1,1)-MR(L)*(RR(K,1,1)-RR(L,1,1))/(MODR**(1.5D0))
+         END IF
+      END DO
+      MODR=0.D0
+      END DO
+
+!      DO K =1,10
+!      WRITE(6,*) K, AR(K,1,1), AR(K,2,1)
+!      END DO
+      
+      DO J = 1, N-1
+         
+         DO K =2,10   
+         DO I=1,2      
+            ALPHA(K,I,J) = VR(K,I,J) + (HR*0.5D0)*AR(K,I,J)
+!            WRITE(6,*) J,I ALPHA(4,I,J)
+            RR(K,I,J+1) = RR(K,I,J) + HR*ALPHA(K,I,J)
+!            WRITE(6,*) J,I,RR(4,I,J+1)
+         END DO
+         END DO
+!      WRITE(6,*) RR(4,1,J), RR(4,2,J), RR(4,1,J+1), RR(4,2,J+1)
+
+         DO K = 2, 10
+         DO L=1,10
+            IF(L.NE.K) THEN
+               MODR=(RR(K,1,J+1)-RR(L,1,J+1))**(2.D0)
+               MODR=MODR+(RR(K,2,J+1)-RR(L,2,J+1))**(2.D0)
+               MODR=MODR**(1.5D0)
+                DO I =1,2                 
+      AR(K,I,J+1)=AR(K,I,J+1)-MR(L)*(RR(K,I,J+1)-RR(L,I,J+1))/MODR
+                END DO
+             END IF
+             MODR = 0.D0
+          END DO
+          END DO
+!       WRITE(6,*) AR(4,1,J), AR(4,2,J), AR(4,1,J+1), AR(4,2,J+1) 
+
+         DO K =2,10 
+         DO I =1, 2
+            VR(K,I,J+1) = ALPHA(K,I,J) + (HR*0.5D0)*AR(K,I,J+1)
+         END DO
+         END DO
+              
+      END DO
+      
+
+!     QUITAMOS EL ESCALADO:
+
+      DO I = 1, 10
+         DO J = 1, 2
+            DO K = 1, N
+               RDR(I,J,K)=RR(I,J,K)*C
+            END DO
+         END DO
+      END DO
+
+!     REALIZAMOS EL MODELO GEOCÉNTRICO.
+      DO I = 1, 10
+         DO J = 1, 2
+            DO K = 1, N
+               RG(I,J,K)=(RR(I,J,K)-RR(4,J,K))*C
+            END DO
+         END DO
+      END DO
+      
+
+      END SUBROUTINE ALGVERPLAN
+!     -------------------------------------------------------------
+      SUBROUTINE PERPLAN
+      INTEGER*8:: M
+
+      I = 2
+      DO WHILE (I.LE.10)
+         DO K = 2, N
+            
+         IF ((RR(I,1,K).GE.0).AND.(RR(I,2,K).LE.0.D0)) THEN
+!            WRITE(6,*) I, K
+         DO M = K, N
+            IF ((RR(I,1,M).LE.RR(I,1,1)).AND.(RR(I,2,M).GE.0.D0)) THEN
+!               WRITE(6,*) I, M
+               PER(I) =  H*M
+               Z(I) = M
+               GO TO 5
+            END IF
+         END DO
+         END IF     
+            
+         END DO
+ 5       I = I+1
+      END DO
+      
+      WRITE(6,*) "1."
+      WRITE(6,*) "SEAN LOS PERIODOS PARA CADA PLANETA CON RESPECTO"
+      WRITE(6,*) "AL CALCULADO RESPECTIVAMENTE EN DIAS, OBTENEMOS:"
+      WRITE(6,*) " "
+      WRITE(6,*) "- PARA MERCURIO: 88,", PER(2)
+      WRITE(6,*) "- PARA VENUS: 224.7,", PER(3)
+      WRITE(6,*) "- PARA TIERRA: 365.2,", PER(4)
+      WRITE(6,*) "- PARA MARTE: 687,", PER(5)
+      WRITE(6,*) "- PARA JUPITER: 4331,", PER(6)
+      WRITE(6,*) "- PARA SATURNO: 10747,", PER(7)
+      WRITE(6,*) "- PARA URANO: 30589,", PER(8)
+      WRITE(6,*) "- PARA NEPTUNO: 59800,", PER(9)
+      WRITE(6,*) "- PARA PLUTON: 90560,", PER(10)
+      END SUBROUTINE PERPLAN
+!     -------------------------------------------------------------
+      SUBROUTINE MOMPLAN
+
+      SUMMOM(1) = 0.D0
+      
+      DO I = 2, 10
+         SUMMOM(I) = 0.D0
+!         WRITE(6,*) Z(i)
+         DO K = 1, Z(I)
+            MOM(I, K) = MR(I)*(RR(I,1,K)*VR(I,2,K)-RR(I,2,K)*VR(I,1,K))
+!            MOM(I,K) = MOM(I,K)*((G*C*(MS**3))**0.5D0)
+!            WRITE(6,*) I, K, MOM(I,K)
+            SUMMOM(I) = SUMMOM(I) + MOM(I,K) 
+         END DO   
+      END DO
+      
+      WRITE(6,*) " "
+      WRITE(6,*) "2. "
+      WRITE(6,*) "LA SUMA DE MOMENTOS PARA CADA UNO DE LOS PLANETAS ES:"
+      WRITE(6,*) " "
+      WRITE(6,*) "- PARA MERCURIO:", SUMMOM(2)
+      WRITE(6,*) "- PARA VENUS:", SUMMOM(3)
+      WRITE(6,*) "- PARA TIERRA:", SUMMOM(4)
+      WRITE(6,*) "- PARA MARTE:", SUMMOM(5)
+      WRITE(6,*) "- PARA JUPITER:", SUMMOM(6)
+      WRITE(6,*) "- PARA SATURNO:", SUMMOM(7)
+      WRITE(6,*) "- PARA URANO:", SUMMOM(8)
+      WRITE(6,*) "- PARA NEPTUNO:", SUMMOM(9)
+      WRITE(6,*) "- PARA PLUTON:", SUMMOM(10)
+
+      END SUBROUTINE MOMPLAN
+!     -------------------------------------------------------------
+      SUBROUTINE ENERGPLAN
+
+      DO I = 2, 10
+         DO K = 1, N
+            
+            EP(I,K) = 0.D0
+            ET(I,K) = 0.D0
+!            WRITE(6,*) I, K, EP(I,K), ET(I,K)
+            DO L=1, 10
+               
+               MODR = 0.D0
+               
+               IF (L.NE.I) THEN
+           MODR = (RR(L,1,K)-RR(I,1,K))**2+(RR(L,2,K)-RR(I,2,K))**2
+           MODR = MODR**0.5D0 
+           EP(I,K)= EP(I,K) - G*(MR(I)*MR(L))/MODR
+!           WRITE(6,*) I, K, EP(I,K), ET(I,K)
+               END IF
+             
+            END DO
+            
+            EC(I,K)=(MR(I)/2)*((VR(I,1,K))**2+(VR(I,2,K))**2)
+!            EC(I,K)= EC(I,K)*(G*(MS)/C)
+!            WRITE(6,*) I, K, EP(I,K), ec(i,k), ET(I,K)
+            ET(I,K) =  EP(I,K) + EC(I,K)
+!            WRITE(6,*) I, K, EP(I,K), ET(I,K)
+         END DO   
+      END DO
+
+      DO I = 2, 10
+         SUMET(I) = 0.D0
+         DO K = 1, Z(I)
+            SUMET(I) = SUMET(I) + ET(I,K)
+!            WRITE(6,*) I, K, SUMET(I)
+         END DO   
+      END DO   
+
+      WRITE(6,*) " "
+      WRITE(6,*) "3. "
+      WRITE(6,*) "LA SUMA DE ENERGIA PARA CADA UNO DE LOS PLANETAS ES:"
+      WRITE(6,*) " "
+      WRITE(6,*) "- PARA MERCURIO:", SUMET(2)
+      WRITE(6,*) "- PARA VENUS:", SUMET(3)
+      WRITE(6,*) "- PARA TIERRA:", SUMET(4)
+      WRITE(6,*) "- PARA MARTE:", SUMET(5)
+      WRITE(6,*) "- PARA JUPITER:", SUMET(6)
+      WRITE(6,*) "- PARA SATURNO:", SUMET(7)
+      WRITE(6,*) "- PARA URANO:", SUMET(8)
+      WRITE(6,*) "- PARA NEPTUNO:", SUMET(9)
+      WRITE(6,*) "- PARA PLUTON:", SUMET(10)
+
+      END SUBROUTINE ENERGPLAN
+!     -------------------------------------------------------------
+      SUBROUTINE REPRESENTACION
+      
+      OPEN(UNIT = 10, FILE = 'MOVHELPLAN.dat', STATUS = 'UNKNOWN')
+      WRITE(10,*) "# 1,2-SOL/3,4-MER/5,6-VEN/7,8-TIE/9,10-MAR/"
+      WRITE(10,*) "# 11,12-JUP/13,14-SAT/15,16-URA/17,18-NEP/19,20-PLU."
+      
+      DO K = 1, N
+      WRITE(10,*) (RDR(I,1,K), RDR(I,2,K), I=1,10)
+      END DO   
+      CLOSE(10)
+      
+      OPEN(UNIT = 11, FILE = 'MOVGEOPLAN.dat', STATUS = 'UNKNOWN')
+      WRITE(11,*) "# 1,2-SOL/3,4-MER/5,6-VEN/7,8-TIE/9,10-MAR/"
+      WRITE(11,*) "# 11,12-JUP/13,14-SAT/15,16-URA/17,18-NEP/19,20-PLU."
+      DO K = 1, N
+      WRITE(11,*) (RG(I,1,K), RG(I,2,K), I=1,10)
+      END DO   
+      CLOSE(11)
+      
+      OPEN(UNIT = 12, FILE = 'VARMOM.dat', STATUS = 'UNKNOWN')
+      WRITE(12,*) "# 1-T, MOMENTOS: 2-SOL/3-MER/4-VEN/5-TIE/6-MAR/"
+      WRITE(12,*) "# 7-JUP/8-SAT/9-URA/10-NEP/11-PLU."
+      DO K = 1, N
+      WRITE(12,*) H*K, (MOM(I,K), I=1,10)
+      END DO   
+      CLOSE(12)
+
+      OPEN(UNIT = 13, FILE = 'VAREC.dat', STATUS = 'UNKNOWN')
+      WRITE(13,*) "# 1-T, ENERCINE: 2-SOL/3-MER/4-VEN/5-TIE/6-MAR/"
+      WRITE(13,*) "# 7-JUP/8-SAT/9-URA/10-NEP/11-PLU."
+      DO K = 1, N
+      WRITE(13,*) H*K, (EC(I,K), I=1,10)
+      END DO   
+      CLOSE(13)
+
+      OPEN(UNIT = 14, FILE = 'VAREP.dat', STATUS = 'UNKNOWN')
+      WRITE(14,*) "# 1-T, ENERPOTEN: 2-SOL/3-MER/4-VEN/5-TIE/6-MAR/"
+      WRITE(14,*) "# 7-JUP/8-SAT/9-URA/10-NEP/11-PLU."
+      DO K = 1, N
+      WRITE(14,*) H*K, (EP(I,K), I=1,10)
+      END DO   
+      CLOSE(14)
+
+      OPEN(UNIT = 15, FILE = 'VARET.dat', STATUS = 'UNKNOWN')
+      WRITE(15,*) "# 1-T, ENERTOTAL: 2-SOL/3-MER/4-VEN/5-TIE/6-MAR/"
+      WRITE(15,*) "# 7-JUP/8-SAT/9-URA/10-NEP/11-PLU."
+      DO K = 1, N
+      WRITE(15,*) H*K, (ET(I,K), I=1,10)
+      END DO   
+      CLOSE(15)
+
+      END SUBROUTINE REPRESENTACION
+!     -------------------------------------------------------------      
+      END PROGRAM EVOLTIE
+      

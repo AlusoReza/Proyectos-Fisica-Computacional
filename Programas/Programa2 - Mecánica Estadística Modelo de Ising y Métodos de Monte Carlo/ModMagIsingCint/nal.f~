@@ -1,0 +1,9 @@
+      PROGRAM NAL
+      
+      USE RANDOMNUMBER
+
+      IMPLICIT NONE
+
+      CALL DRAN_INI(13567)
+      STOP
+      END PROGRAM NAL

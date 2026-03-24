@@ -1,0 +1,7 @@
+set term gif animate
+
+set output 'MetIsingT1Part32.gif'
+
+set palette grey
+
+set xra

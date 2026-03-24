@@ -1,0 +1,10 @@
+set term gif animate
+
+set output 'schr3.gif'
+
+set xra[0:5000]
+set yra[0:1.1]
+
+set xlabel 'n - Tiempo'
+
+do for [a = 0:2000:2] {plot 'NXPHPHFT.dat' i 0:a u 1:6 w l lw 2 t 'dX*dP'}

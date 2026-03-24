@@ -1,0 +1,9 @@
+set term gif animate
+
+set output 'DiagramaFases_ult.gif'
+
+set yra[-2:2]
+set xra[-2:2]
+set size square
+
+do for [a=1:200] {plot 'DIAGASES.dat' i 0:a u 1:2 w p ps 2 pt 7 t 'Diagrama Fases'}

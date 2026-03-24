@@ -1,0 +1,67 @@
+      PROGRAM NAVESPRUNGKUT
+
+      IMPLICIT NONE
+  
+      INTEGER*8:: I, J, K, L, M, N
+      REAL*8:: PI, G, RT, RL, MT, ML, OMEGATL, DTL
+      
+!     EN MEDIDAS DEL SISTEMA INTERNACIONAL. PUNTUALIZAR QUE LOS RESPECTIVOS VALORES A LA TIERRA Y LA LUNA, SON T Y L, PARA EL RADIO R Y LA MASA M. OMEGATL ES LA VELOCIDAD ANGULAR DE LA LUNA (2*PI/T) EN 1/S.
+      
+      PARAMETER(PI = 4.D0*ATAN(1.D0))
+      PARAMETER(G = 6.67430D-11)
+      PARAMETER(RT = 6.378160D6)
+      PARAMETER(RL = 1.7374D6)
+      PARAMETER(MT = 5.9736D24)
+      PARAMETER(ML = 0.07349D24)
+      PARAMETER(OMEGATL = 2.597D-6)
+      PARAMETER(DTL = )
+
+!     ------------------------------------------------------
+      
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "SE MODELARA EL RECORRIDO QUE DEBE HACER UN COHETE "
+      WRITE(6,*) "LANZADO DESDE LA TIERRA Y QUE LLEGA HASTA LA LUNA "
+      WRITE(6,*) "SIGUIENDO LA TRAYECTORIA QUE MÁS ACERTADA DEBERÍA"
+      WRITE(6,*) "DE LLEGAR PARA QUE EL VIAJE SEA POSIBLE. "
+      WRITE(6,*) "PARA ELLO, SE USARÁ UN ALGORITMO DE RUNGE-KUTTA "
+      WRITE(6,*) "QUE COMPUTA MUY APROXIMADAMENTE LAS DERIVADAS DE "
+      WRITE(6,*) "LA FUNCION QUE DESCRIBE DICHO MOVIMIENTO."
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+  
+      CALL DATOS
+      CALL RESULTADOS
+      
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "SE HAN OBTENIDO LOS CORRESPONDIENTES RESULTADOS, "
+      WRITE(6,*) "PARA VISUALIZAR LOS DATOS IR A ARCHIVOS: PTRIES.dat"
+      WRITE(6,*) "Y NXPHPH.dat QUE GUARDAN LOS DATOS CORRECTAMENTE"
+      WRITE(6,*) "TABULADOS."
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+  
+      STOP
+!     ------------------------------------------------------
+      CONTAINS
+!     ------------------------------------------------------
+      SUBROUTINE DATOS
+
+      
+
+      END SUBROUTINE DATOS
+!     ------------------------------------------------------
+      SUBROUTINE RESULTADOS
+
+      END SUBROUTINE RESULTADOS
+!     ------------------------------------------------------ 
+      END PROGRAM NAVESPRUNGKUT

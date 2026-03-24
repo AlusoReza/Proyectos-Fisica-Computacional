@@ -1,0 +1,31 @@
+set term gif animate
+
+set output 'schr2.gif'
+ 
+do for [a = 0:2000:2] {
+
+set multiplot layout 3,1
+
+set xra[0:5000]
+set yra[0:1]
+set ytics('0' 0, '0.5' 0.5, '1' 1)
+set xlabel 'n - Tiempo'
+plot 'NXPHPHFT.dat' i 0:a u 1:3 w l lw 2 t '<Xm>'
+
+set xra[0:5000]
+set yra[-21:21]
+set ytics('-22' -22, '0' 0, '22' 22)
+unset label
+set xlabel 'n - Tiempo'
+plot 'NXPHPHFT.dat' i 0:a u 1:4 w l lw 2 t '<Pm>'
+
+set xra[0:5000]
+set yra[525:550]
+set ytics('525' 525, '537.5' 537.5, '550' 550)
+unset label
+set xlabel 'n - Tiempo'
+plot 'NXPHPHFT.dat' i 0:a u 1:5 w l lw 2 t '<Hm>'
+
+unset multiplot
+}
+ 

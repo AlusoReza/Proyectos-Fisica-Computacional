@@ -1,0 +1,4 @@
+set xlabel "T"
+set ylabel "{/chi}"
+
+plot

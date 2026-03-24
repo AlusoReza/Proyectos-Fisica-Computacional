@@ -1,0 +1,456 @@
+!     ESTE PROGRAMA MODELA CÓMO SE MAGNETIZA UN MATERIAL SIGUIENDO UN MODELO DE ISING Y EL MÉTODO DE MONTECARLO.
+
+      PROGRAM MODMAGISING
+
+      USE RANDOMNUMBER
+
+      IMPLICIT NONE
+
+      INTEGER*8:: I, J, K, M, X
+      INTEGER*8:: NT, NN, PM, TP, MEC
+      REAL*8, DIMENSION(:), ALLOCATABLE:: T, EPT, MPT
+      REAL*8, DIMENSION(:,:), ALLOCATABLE:: ENER, MAG
+      REAL*8, DIMENSION(:,:,:), ALLOCATABLE:: INCE, E
+      INTEGER*8, DIMENSION(:,:,:,:), ALLOCATABLE:: S
+
+!     LLAMAMOS PROGRAMA QUE GENERA NÚMEROS ALEATORIOS.
+      CALL DRAN_INI(13567)
+!     -------------------------------------------------
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "SE MODELARA LA MAGNETIZACION DE UN MATERIAL TAL QUE"
+      WRITE(6,*) "A TEMPERATURAS BAJAS ES FERROMAGNETICO Y A ALTAS "
+      WRITE(6,*) "TEMPERATURAS ES PARAMANETICO SIGUIENDO UN MODELO "
+      WRITE(6,*) "DE ISING CON EL METODO DE MONTECARLO. SE INTRODUCIRAN"
+      WRITE(6,*) "UN DETERMINADO NUMERO DE PARTICULAS N, Y SE VERÁ SU"
+      WRITE(6,*) "EVOLUCION PARA OTRO NUMERO DE TEMPERATURAS DADAS."     
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+
+      CALL DATOS
+!     -------------------------------------------------
+      WRITE(6,*) " "
+      WRITE(6,*) "EN EL MODELO DE ISING SE CONSIDERA QUE PARA"
+      WRITE(6,*) "EL CONSIDERADO MATERIAL EXISTE UNA RED "
+      WRITE(6,*) "BIDIMENSIONAL DE N*N PARTÍCULAS CADA UNA CON"
+      WRITE(6,*) "UNA VARIABLE, SPÍN, QUE TOMA LOS VALORES"
+      WRITE(6,*) "1 O -1, TAL QUE FORMA UNA MATRIZ S(I,J)."
+
+      WRITE(6,*) " "
+      WRITE(6,*) "SI DESEA TENER LA MISMA DISTRIBUCION MATRICIAL"
+      WRITE(6,*) "DE S PARA TODAS LAS TEMPERATURAS, PULSE 1, EN"
+      WRITE(6,*) "CASO CONTRARIO, PULSE 2."
+ 3    READ(5,*) X
+      
+!     -------------------------------------------------            
+      IF (X.EQ.1) THEN
+         
+      WRITE(6,*) " "
+      WRITE(6,*) "SI DESEA QUE SEA RELLENADA PARA UN MISMO VALOR"
+      WRITE(6,*) "PULSE 1, EN CASO CONTRARIO, QUE SEA RELLENADA"
+      WRITE(6,*) "DE MANERA ALEATORIA, PULSE 2."
+      WRITE(6,*) "(ES DECIR, ORDENADA O DESORDENADA RESPECTIVAMENTE.)"
+ 1    READ(5,*) X
+      
+      IF (X.EQ.1) THEN
+
+         CALL SORD1        
+      
+      ELSE IF (X.EQ.2) THEN
+         
+         CALL SDESORD1
+         
+      ELSE
+         
+         WRITE(6,*) "POR FAVOR, PULSE 1 O 2."
+         GO TO 1
+         
+         
+      END IF
+!     -------------------------------------------------         
+      ELSE IF(X.EQ.2) THEN
+         DO K = 1, NT
+      WRITE(6,*) " "
+      WRITE(6,*) "- PARA LA MATRIZ DE T(,",K,")."
+      WRITE(6,*) "SI DESEA QUE SEA RELLENADA PARA UN MISMO VALOR"
+      WRITE(6,*) "PULSE 1, EN CASO CONTRARIO, QUE SEA RELLENADA"
+      WRITE(6,*) "DE MANERA ALEATORIA, PULSE 2."
+      WRITE(6,*) "(ES DECIR, ORDENADA O DESORDENADA RESPECTIVAMENTE.)"
+ 2    READ(6,*) X
+
+      IF (X.EQ.1) THEN
+         CALL SORD2
+      ELSE IF (X.EQ.2) THEN
+         CALL SDESORD2
+      ELSE         
+         WRITE(6,*) "POR FAVOR, PULSE 1 O 2."
+         GO TO 2         
+      END IF
+      
+      END DO                     
+!     -------------------------------------------------              
+      ELSE
+         WRITE(6,*) "POR FAVOR, PULSE 1 O 2."
+         GO TO 3
+      END IF   
+
+!     -------------------------------------------------
+
+!     FINALMENTE SEGUIMOS CON EL MÉTODO DE MONTECARLO.
+      CALL METMONTCARLOS
+      CALL ENMEDIA
+      CALL MAGN
+      
+!     -------------------------------------------------
+      CALL RESULTADOS
+      WRITE(6,*) "-----------------------------------------------------"
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "YA SE HAN CALCULADO LAS CORRESPONDIENTES MATRICES"
+      WRITE(6,*) "S(I,J). SE HALLAN EN SUS CORRESPONDIENTES DOCUMENTOS"
+      WRITE(6,*) "QUE COMIENZAN CON EL NOMBRE MSPT-TP. EL NÚMERO DE"
+      WRITE(6,*) "PARTICULAS ES EL INTRODUCIDO MANUALMENTE."
+      WRITE(6,*) " "
+      WRITE(6,*) " "
+      WRITE(6,*) "-----------------------------------------------------"
+      
+!     -------------------------------------------------      
+      STOP
+!     -------------------------------------------------
+      CONTAINS
+
+      SUBROUTINE DATOS
+      
+!       WRITE(6,*) " "
+!       WRITE(6,*) "INTRODUZCA EL NUMERO DE TEMPERATURAS PARA LOS QUE"
+!       WRITE(6,*) "QUIERES REALIZAR EL MODELO:"
+!      READ(5,*) NT
+!      ALLOCATE(T(1:NT))
+
+!      WRITE(6,*) " "
+!      WRITE(6,*) "AHORA INTRODUCE LAS T POR PANTALLA, EN GRADOS KELVIN:"
+!      DO I = 1, NT
+!         READ(5,*) T(I)
+!     END DO
+
+!      WRITE(6,*) " "
+!      WRITE(6,*) "ESCRIBA EL NUMEROS DE PARTICULAS (N) PARA EL  "
+!      WRITE(6,*) "QUE DESEA REALIZAR EL MODELO DE ISING:"
+!      READ(6,*) NN
+!      ALLOCATE(N(1:NN))      
+
+!      WRITE(6,*) "PARA CUANTOS PASOS DESEA REALIZAR"
+!      WRITE(6,*) " EL MÉTODO DE MONTECARLO:"
+!     READ(5,*) PM
+
+!     ALLOCATE(S(1:PM+1,0:NN+1,0:NN+1,1:NT))
+!     ALLOCATE(E(1:PM,1:NN**2,1:NT))
+!     ALLOCATE(EPROM(1:PM,1:NT))
+!     ALLOCATE(MPROM(1:PM,1:NT))
+!     ALLOCATE(EPT(1:NT))
+!     ALLOCATE(MPT(1:NT))
+!     ALLOCATE(INCE(1:PM,1:NN**2,1:NT))      
+      
+      NT = 6
+      ALLOCATE(T(1:NT))
+      T(1) = 5.D0
+      T(2) = 2.5D0
+      T(3) = 2.27D0
+      T(4) = 1.D0
+      T(5) = 0.5D0
+      T(6) = 0.01D0
+
+      PM = 1000
+      
+      NN = 64
+
+      MEC = PM/5
+      ALLOCATE(S(0:PM+1,0:NN+1,0:NN+1,1:NT))
+      ALLOCATE(ENER(0:MEC,1:NT))
+      ALLOCATE(MAG(0:MEC,1:NT))
+      ALLOCATE(EPT(1:NT))
+      ALLOCATE(MPT(1:NT))
+      ALLOCATE(INCE(0:PM,1:NN**2,1:NT))
+
+      
+
+      
+      
+      END SUBROUTINE DATOS
+!     -------------------------------------------------
+      SUBROUTINE SORD1
+      
+      WRITE(6,*) " "
+      WRITE(6,*) "DESEA QUE SE RELLENE DE 1 O -1. INTRODUZCALO."
+ 4    READ(5,*) X
+
+      IF(X.EQ.1) THEN
+         
+      DO K = 1, NT
+         DO I = 1, NN
+            DO J = 1, NN
+               S(0,I,J,K) = 1
+            END DO
+         END DO
+      END DO 
+
+      ELSE IF (X.EQ.-1) THEN
+         
+      DO K = 1, NT   
+         DO I = 1, NN
+            DO J = 1, NN
+               S(0,I,J,K) = -1
+            END DO
+         END DO
+      END DO   
+
+      ELSE
+         WRITE(6,*) "POR FAVOR, INTRODUZCA 1 O -1"
+         GO TO 4
+      END IF
+         
+
+      END SUBROUTINE SORD1
+!     -------------------------------------------------
+      SUBROUTINE SDESORD1
+
+      DO K = 1, NT
+         DO I = 1, NN
+            DO J = 1, NN
+         
+      IF(I_DRAN(INT8(10.D0)).GT.5) THEN
+      
+         S(0,I,J,K) = 1
+
+      ELSE 
+         
+         S(0,I,J,K) = -1  
+
+      END IF
+
+            END DO
+         END DO
+      END DO 
+
+      END SUBROUTINE SDESORD1
+!     -------------------------------------------------
+      SUBROUTINE SORD2
+
+      WRITE(6,*) " "
+      WRITE(6,*) "DESEA QUE SE RELLENE DE 1 O -1. INTRODUZCALO."
+ 5    READ(5,*) X
+
+      IF(X.EQ.1) THEN
+         
+      DO I = 1, NN
+         DO J = 1, NN
+            S(0,I,J,K) = 1
+         END DO
+      END DO
+
+      ELSE IF (X.EQ.-1) THEN
+           
+      DO I = 1, NN
+         DO J = 1, NN
+            S(0,I,J,K) = -1
+         END DO
+      END DO   
+
+      ELSE
+         WRITE(6,*) "POR FAVOR, INTRODUZCA 1 O -1"
+         GO TO 5
+      END IF
+
+      END SUBROUTINE SORD2
+!     -------------------------------------------------
+      SUBROUTINE SDESORD2
+
+      DO I = 1, NN
+        DO J = 1, NN
+         
+      IF(I_DRAN(INT8(2.D0)).GT.1) THEN
+      
+         S(0,I,J,K) = 1
+
+      ELSE 
+         
+         S(0,I,J,K) = -1  
+
+      END IF
+
+         END DO
+      END DO
+
+      END SUBROUTINE SDESORD2   
+!     -------------------------------------------------
+!     TAL CUAL LAS CONDICIONES PARA EL MODELO QUE ESTAMOS TRABAJANDO, NO TIENE MUCHA HISTORIA. SI CONSIDERAMOS UNA MATRIZ DE NN PARTICULAS, CONSIDERAMOS LA POSICIÓN INICIAL DE LA PRIMERA COMO 1 Y DE LA ÚLTIMA CÓMO NN. LA POSICIÓN 0 Y NN+1 DEFINEN LAS CONDICIONES DE CONTORNO.
+      SUBROUTINE CONDCONT
+      
+      DO I=1,NN
+         DO J = 1, NN
+            S(M+1,I,J,TP) = S(M,I,J,TP)
+         END DO
+      END DO
+         
+      DO I = 1, NN
+         S(M,I,0,TP) = S(M,I,NN,TP)
+         S(M,I,NN+1,TP) = S(M,I,1,TP)
+      END DO
+
+      DO J = 1, NN
+         S(M,0,J,TP) = S(M,NN,J,TP)
+         S(M,NN+1,J,TP) = S(M,1,J,TP)
+      END DO   
+
+      END SUBROUTINE CONDCONT
+!     -------------------------------------------------
+      SUBROUTINE METMONTCARLOS
+
+      INTEGER*8:: A, B
+      REAL*8:: AE, P, ZM, NA
+      
+      DO TP=1, NT
+      DO M=0, PM-1 
+!     AÑADIMOS CONDICIONES DE CONTORNO.
+      CALL CONDCONT        
+!     FUSIONAMOS EL DOBLE SUMATORIO COMO SUMI*SUMJ=SUMK.
+      DO K = 1, NN**2
+            
+!     PRIMERO SE COGEN PUNTOS ALEATORIOS DE LA MATRIZ S(I,J), PARA ELLO TENEMOS QUE COGER DOS VALORES A Y B QUE SE VAN A DETERMINAR ALEATORIAMENTE ENTRE 0 Y NN. POSTERIORMENTE CALCULAMOS LA ENERGÍA DE LA PARTÍCULA S(A,B). EVALUAMOS Z Y P. GENERAMOS UN NUMERO ALEATORIO ENTRE 0 Y 1. SI ESTE ES MENOR QUE Z CAMBIAMOS EL VALOR DEL SPIN.
+            
+         A = I_DRAN(NN)
+         B = I_DRAN(NN)
+
+         AE=S(M,A+1,B,TP)+S(M,A-1,B,TP)+S(M,A,B+1,TP)+S(M,A,B-1,TP)
+
+         INCE(M,K,TP)= 2*S(M,A,B,TP)*AE
+
+         ZM = EXP(-INCE(M,K,TP)/T(TP))
+         P = DMIN1(1.D0,ZM)
+       
+         NA = DRAN_U()
+
+         IF (NA.LT.P) THEN
+            S(M+1,A,B,TP) = -S(M,A,B,TP)
+         END IF           
+        
+      END DO 
+      END DO
+      END DO
+      
+      END SUBROUTINE METMONTCARLOS
+!     -------------------------------------------------
+      
+      SUBROUTINE ENMEDIA
+
+      DO TP =1, NT
+         EPT(TP) = 0.D0  
+      DO M = 0, PM, 5
+            
+         ENER(M/5,TP) = 0.D0
+         
+         DO I = 1, NN
+         DO J = 1, NN
+            ENER(M/5,TP) = ENER(M/5,TP) - (0.5D0)*S(M,I,J,TP)*(S(M,I+1,J,TP)+S(M,I-1,J,TP)+S(M,I,J+1,TP)+S(M,I,J-1,TP))          
+         END DO      
+         END DO
+      
+         ENER(M/5,TP) = ENER(M/5,TP)/NN**2
+      
+         IF (M.GT.(MEC/5)) THEN
+            EPT(TP) = EPT(TP) + ENER(M/5,TP)
+         END IF
+         
+      END DO
+
+         EPT(TP) = EPT(TP)/MEC
+      
+      END DO
+
+      
+      END SUBROUTINE ENMEDIA
+      
+!     -------------------------------------------------
+      SUBROUTINE MAGN
+      
+      DO TP =1, NT
+         
+         MPT(TP) = 0.D0
+         
+      DO M=0, PM, 5
+            
+         MAG(M/5,TP) = 0.D0
+         
+         DO I=1, NN
+         DO J =1, NN
+               
+            MAG(M/5,TP) = MAG(M/5,TP)+S(M,I,J,TP)
+            
+         END DO   
+         END DO
+
+         MAG(M/5,TP) = ABS(MAG(M/5,TP))/(DBLE(NN)**2)
+
+         IF(M.GT.(MEC/5)) THEN
+            MPT(TP) = MPT(TP) + MAG(M/5,TP)
+         END IF
+         
+      END DO
+
+         MPT(TP) = MPT(TP)/MEC
+      
+      END DO
+      
+      END SUBROUTINE MAGN 
+!     -------------------------------------------------      
+      SUBROUTINE RESULTADOS
+      CHARACTER*8:: NUM
+      CHARACTER*50, DIMENSION(:), ALLOCATABLE:: MSPT, MEPMT
+      
+      
+      ALLOCATE(MSPT(1:NT))
+      ALLOCATE(MEPMT(1:NT))
+      
+      DO TP = 1, NT
+      	WRITE(NUM,999) TP
+999 	FORMAT(I1)
+      	MSPT(TP) = 'MSPT'//NUM//'.dat'
+        MEPMT(TP) = 'MEPMT'//NUM//'.dat'
+      END DO
+	
+      DO TP = 1, NT
+      OPEN(20+TP, FILE = MSPT(TP), STATUS = 'UNKNOWN')
+         DO M = 0, PM
+         DO J = 1, NN
+         WRITE(20+TP,*) (S(M,I,J,TP), I =1, NN)
+         END DO
+         WRITE(20+TP,*)
+         WRITE(20+TP,*)
+         END DO
+      CLOSE(20+TP)
+      END DO
+
+      DO TP = 1, NT
+      OPEN(450+TP, FILE = MEPMT(TP), STATUS = 'UNKNOWN')
+      DO M=0, MEC
+         WRITE(450+TP,*) M*5, MAG(M,TP), ENER(M,TP)
+      END DO
+      CLOSE(450+TP)
+      END DO
+      
+      OPEN(900, FILE = "MEPPT.dat", STATUS = 'UNKNOWN')
+      DO TP = 1, NT
+         WRITE(900,*) T(TP), MPT(TP), EPT(TP)
+      END DO
+      CLOSE(900)
+
+      
+
+      END SUBROUTINE RESULTADOS
+!     -------------------------------------------------
+      
+      END PROGRAM MODMAGISING

@@ -1,0 +1,30 @@
+set term gif animate
+
+set output 'schr1.gif'
+
+do for [a = 0:2000:2] {
+
+set multiplot layout 3,1
+
+set xra[0:1000]
+set yra[0:4.5]
+set ytics('0' 0, '2.25' 2.25, '4.5' 4.5)
+set xlabel 'j - (Espacio)'
+plot 'PTRIES.dat' i a u 2:5 w l lw 2 t 'Probabilidad'
+
+set xra[0:1000]
+set yra[-3:3]
+set ytics('-3' -3, '0' 0, '3' 3)
+unset label
+set xlabel 'j - Espacio'
+
+plot 'PTRIES.dat' i a u 2:3 w l lw 2 t 'Parte real', '' i a u 2:4 w l lw 2 t 'Parte imaginaria'
+set xra[0:5000]
+set yra[0:1.1]
+set ytics('0' 0.0, '0.5' 0.5, '1.000' 1)
+unset label
+set xlabel 'n - Tiempo'
+plot 'NXPHPHFT.dat' i 0:a u 1:2 w l lw 2 t 'Norma'
+unset multiplot
+}
+ 

@@ -1,0 +1,130 @@
+!     ESTE PROGRAMA RESUELVE LA ECUACIÓN DE UN PENDULO REAL SIGUIENDO UN
+!     ALGORITMO DE VERLET Y PARA UN NUMERO DE PARTÍCULAS.
+
+      PROGRAM PENDSIMPALGVERLET
+
+      IMPLICIT NONE
+      INTEGER*8:: NP, TT
+      REAL*8:: H, T, PI
+      REAL*8, DIMENSION(:), ALLOCATABLE:: DT
+      REAL*8, DIMENSION(:,:), ALLOCATABLE:: THETA1, THETA2, THETA3
+      REAL*8, DIMENSION(:,:), ALLOCATABLE:: X, Y, EC, EP, ET
+
+      PI = 4.D0*ATAN(1.D0)
+
+      WRITE(6,*) "ESTE PROGRAMA RESUELVE LA ECUACION DE UN "
+      WRITE(6,*) "PÉNDULO SIMPLE SIGUIENDO UN ALGORITMO DE VERLET."
+
+!     INICIAMOS PROGRAMA PIDIENDO QUE SE INTRODUZCAN LOS DATOS DESEADOS
+      CALL DATOS
+      CALL CALEYPOS
+
+!     PEDIMOS QUE HAGA EL ALGORITMO DE VERLET.
+      CALL ALGVERLET
+      
+      STOP
+
+      CONTAINS
+
+!     HAY QUE DEFINIR UNA FUNCION PARA LA ACELERACION ANGULAR, MIRAR LIBRETA:
+      REAL*8 FUNCTION F(Y)
+      REAL*8:: Y
+
+      F = 9.81*SIN(Y*(PI/180.D0))
+
+      END FUNCTION
+
+      SUBROUTINE DATOS
+
+      INTEGER*8:: I, J
+
+      WRITE(6,*) "INTRODUZCA EL NUMERO DE PARTICULAS:"
+      READ(5,*) NP
+      WRITE(6,*) "INTRODUZCA EL TIEMPO (T) INICIAL EN SEGUNDOS (S):"
+      READ(5,*) T
+      WRITE(6,*) "INTRODUZCA EL TIEMPO TRANSCURRIDO DIF. (H) EN S:"
+      READ(5,*) H
+      WRITE(6,*) "INTRODUZCA EL TIEMPO TRANSCURRIDO (T) EN S:"
+      READ(5,*) TT
+
+      ALLOCATE(DT(1:TT))
+
+      DT(1) = T
+      DO I=2, TT
+         DT(I)= DT(I-1) + H
+      END DO   
+
+      ALLOCATE(THETA1(1:NP,1:TT))
+      ALLOCATE(THETA2(1:NP,1:TT))
+      ALLOCATE(THETA3(1:NP,1:TT))
+      ALLOCATE(X(1:NP,1:TT))
+      ALLOCATE(Y(1:NP,1:TT))
+      ALLOCATE(EC(1:NP,1:TT))
+      ALLOCATE(EP(1:NP,1:TT))
+      ALLOCATE(ET(1:NP,1:TT))
+      
+      DO I=1, NP
+         
+      WRITE(6,*) "INTRODUZCA LA POSICIÓN (THETA1),",I, "INICIAL:"
+      READ(5,*) THETA1(I,1)
+
+      WRITE(6,*) "INTRODUZCA LA VELOCIDAD (THETA2),",I, "INICIAL:"
+       READ(5,*) THETA2(I,1)
+      
+      END DO
+      
+      WRITE(6,*) "LOS DATOS INTRODUCIDOS SON:"
+      WRITE(6,*) "NP=",NP,"T=",T,"H=",H
+      DO I=1, NP
+      WRITE(6,*) "PARA LA PARTICULA:",I 
+      WRITE(6,*) "THETA1=",THETA1(I, 1),"Y THETA2= ",THETA2(I,1)
+      END DO
+      END SUBROUTINE DATOS
+
+      SUBROUTINE CALEYPOS
+
+      INTEGER*8:: I
+
+      DO I=1, NP
+         EC(I,1) =
+         EP(I,1) =
+         ET(I,1) =
+         X(I,1) =
+         Y(I,1) =
+      END DO   
+
+      END SUBROUTINE CALEYPOS
+
+      SUBROUTINE ALGVERLET
+
+      INTEGER*8:: I, J 
+      REAL*8, DIMENSION(:,:), ALLOCATABLE:: ALPHA
+
+      ALLOCATE(ALPHA(1:NP,1:TT))
+      
+      DO I=1, NP
+         DO J=1, TT-1
+            
+         THETA3(I,J) = F(THETA1(I,J))
+         ALPHA(I,J) = THETA2(I,J) + (H/2.D0)*THETA3(I, J)
+         THETA1(I,J+1) = THETA1(I,J) + ALPHA(I,J)*H
+         THETA3(I,J+1) = F(THETA1(I,J+1))
+         THETA2(I,J+1) = ALPHA(I, J) + (H/2.D0)*THETA3(I,J+1)
+
+         
+
+         END DO
+      END DO
+
+      OPEN(UNIT = 7, FILE = 'datos.dat', STATUS = 'UNKNOWN')
+      DO I=1, NP
+         DO J=1, TT
+!           WRITE(7,*) DT(J),THETA1(I,J),THETA2(I,J),EC(I,J),EP(I,J),ET(I,J),X(I,J),Y(I,J)
+            WRITE(6,*) I, J, THETA1(I,J), THETA2(I,J), THETA3(I,J)
+         END DO
+      END DO
+      CLOSE(7)
+      
+      END SUBROUTINE ALGVERLET
+      
+      END PROGRAM PENDSIMPALGVERLET

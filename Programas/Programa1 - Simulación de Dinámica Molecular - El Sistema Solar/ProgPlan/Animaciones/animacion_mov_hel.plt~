@@ -1,0 +1,6 @@
+set term gif animate
+
+set output 'Mov_Sis_Solar_Exterior.gif'
+
+set xra[]
+set yra[]
